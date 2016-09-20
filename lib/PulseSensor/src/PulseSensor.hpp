@@ -59,14 +59,14 @@ private:
 public:
     friend void TIMER2_COMPA_vect (void);
 
-    static PulseSensor<AnalogPin> & init (void)
+    static PulseSensor<AnalogPin> & getInstance (void)
     {
         pSensor = new PulseSensor<AnalogPin>();
         setupInterrupt();
         return pSensor;
     };
-    //
-    // PulseSensor(PulseSensor &) = delete;
-    // void operator=(PulseSensor const&) = delete;
+
+    PulseSensor(PulseSensor &) = delete;
+    void operator=(PulseSensor const&) = delete;
 
 };

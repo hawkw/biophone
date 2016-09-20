@@ -6,8 +6,10 @@
 #include "Arduino.h"
 #include <PulseSensor.hpp>
 
-void setup () {
+PulseSensor<A0> heartbeat;
 
+void setup () {
+    heartbeat = PulseSensor<A0>::getInstance();
 }
 
 void loop () {
