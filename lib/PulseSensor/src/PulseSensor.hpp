@@ -10,12 +10,15 @@
 */
 #include "Arduino.h"
 
-template <int AnalogPin>
+enum PSensorTimer { T1
+                  , T2
+                  };
+
+template <int AnalogPin, PSensorTimer Timer>
 class PulseSensor {
 private:
     //-- make the constructor, etc private ----------------------------------
-    PulseSensor<AnalogPin>() {};
-    static PulseSensor<AnalogPin> * pSensor;
+    PulseSensor<AnalogPin, Timer>() {};
 
     //-- volatile variables used in ISR -------------------------------------
     volatile int analogPin = AnalogPin //!< analog in pin
@@ -43,30 +46,94 @@ private:
     /**
      * Initializes Timer 2 to throw an interrupt every 2ms
      */
-    void setupInterrupt()
-    {
-        TCCR2A = 0x02; // disable PWM on digital pins 3 and 11, and go into CTC mode
-        TCCR2B = 0x06; // don't force compare, 256 prescaler
-        OCR2A = 0x7c;  // set the top of the count to 124 for 500hz sample rate
-        TIMSK2 = 0x02; // enable IRQ on match between Timer2 and ORC2A;
-        sei();         // enable global interrupts
-    };
+    void setupInterrupt(void);
 
     volatile int n (void) {
         return sampleCounter - lastBeatTime;
     }
 
 public:
-    friend void TIMER2_COMPA_vect (void);
 
-    static PulseSensor<AnalogPin> & getInstance (void)
+    /**
+     * Returns the pulse sensor instance for this AnalogPin
+     */
+    static PulseSensor<AnalogPin, Timer> & getInstance (void)
     {
-        pSensor = new PulseSensor<AnalogPin>();
-        setupInterrupt();
+        static PulseSensor pSensor;
+        pSensor.setupInterrupt();
         return pSensor;
     };
 
     PulseSensor(PulseSensor &) = delete;
     void operator=(PulseSensor const&) = delete;
 
+};
+
+template <int AnalogPin>
+class PulseSensor<AnalogPin, PSensorTimer::T1> {
+public:
+    /**
+     * Interrupt triggered by the timer.
+     *
+     * The `TIMER1_COMPA` interrupt must be declared as a friend function
+     * in order to access private members of the PulseSensor class.
+     *
+     * @method TIMER1_COMPA_vect
+     */
+    friend void TIMER1_COMPA_vect (void);
+
+    /**
+     * Returns the pulse sensor instance for this AnalogPin
+     */
+    static PulseSensor<AnalogPin, PSensorTimer::T1> & getInstance (void)
+    {
+        static PulseSensor pSensor;
+        pSensor.setupInterrupt();
+        return pSensor;
+    };
+private:
+    void setupInterrupt(void) {
+        // Initializes Timer1 to throw an interrupt every 2mS.
+        TCCR1A = 0x00; // DISABLE OUTPUTS AND PWM ON DIGITAL PINS 9 & 10
+        TCCR1B = 0x11; // GO INTO 'PHASE AND FREQUENCY CORRECT' MODE, NO PRESCALER
+        TCCR1C = 0x00; // DON'T FORCE COMPARE
+        TIMSK1 = 0x01; // ENABLE OVERFLOW INTERRUPT (TOIE1)
+        ICR1 = 16000;  // TRIGGER TIMER INTERRUPT EVERY 2mS
+        sei();         // MAKE SURE GLOBAL INTERRUPTS ARE ENABLED
+    }
+};
+
+template <int AnalogPin>
+class PulseSensor<AnalogPin, PSensorTimer::T2> {
+private:
+
+    void setupInterrupt(void) {
+        // Initializes Timer2 to throw an interrupt every 2mS.
+        TCCR2A = 0x02;     // DISABLE PWM ON DIGITAL PINS 3 AND 11, AND GO INTO CTC MODE
+        TCCR2B = 0x06;     // DON'T FORCE COMPARE, 256 PRESCALER
+        OCR2A = 0X7C;      // SET THE TOP OF THE COUNT TO 124 FOR 500Hz SAMPLE RATE
+        TIMSK2 = 0x02;     // ENABLE INTERRUPT ON MATCH BETWEEN TIMER2 AND OCR2A
+        sei();             // MAKE SURE GLOBAL INTERRUPTS ARE ENABLED
+    };
+
+public:
+    /**
+     * Interrupt triggered by the timer.
+     *
+     * The `TIMER2_COMPA` interrupt must be declared as a friend function
+     * in order to access private members of the PulseSensor class.
+     *
+     * @method TIMER2_COMPA_vect
+     */
+    friend void TIMER2_COMPA_vect (void);
+
+    /**
+     * Returns the pulse sensor instance for this AnalogPin
+     */
+    static PulseSensor<AnalogPin, PSensorTimer::T2> & getInstance (void)
+    {
+        static PulseSensor pSensor;
+        pSensor.setupInterrupt();
+        return pSensor;
+    };
 };
