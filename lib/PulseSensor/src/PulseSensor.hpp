@@ -8,6 +8,7 @@
     @author Eliza Weisman
     @version 0.1
 */
+
 #include "Arduino.h"
 
 #ifndef PSENSOR_ANALOG_PIN
@@ -35,12 +36,39 @@
     #endif
 #endif
 
+/**
+ * A pulse sensor callback.
+ * @method void
+ * @param  Callback [description]
+ * @return [description]
+ */
+typedef void (*Callback)();
+
+template <size_t N_CALLBACKS>
 class PulseSensor {
 public:
+    // /**
+    //  * Initializes pulse sensor with no callbacks
+    //  */
+    // static PulseSensor<N_CALLBACKS> init();
+    //
+    // /**
+    //  * Initializes pulse sensor with N callbacks.
+    //  */
+    // static PulseSensor<N_CALLBACKS> & init( Callback callbacks[N_CALLBACKS] );
+
     /**
-     * Initializes timer to throw an interrupt every 2ms
+     * Adds a callback to the pulse sensor.
+     * @method add_callback
+     * @param  callback [description]
+     * @return [description]
      */
-    static void init (void);
+    static boolean add_callback( Callback callback );
+
+
 private:
-    PulseSensor () {};
+    volatile Callback callbacks[N_CALLBACKS];
 };
+
+void init_interrupts(void);
+// #include "PulseSensor.cpp"

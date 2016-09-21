@@ -7,7 +7,7 @@
 #include <PulseSensor.hpp>
 
 void setup () {
-    PulseSensor::init();
+    PulseSensor<(size_t)2>::init();
 }
 
 void loop () {

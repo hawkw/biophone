@@ -100,20 +100,4 @@ void read (void) {
         secondBeat = false;           // when we get the heartbeat back
     }
     return;
-}
-
-
-void PulseSensor::init(void) {
-
-   #if (PSENSOR_TIMER1)
-       Timer1.initialize(2000);
-       Timer1.attachInterrupt(read);
-   #elif (PSENSOR_TIMER2)
-       MsTimer2::set(2, read); // 2ms period
-       MsTimer2::start();
-   #else
-       #error "Must define a pulse sensor timer!"
-   #endif
-
-   sei();         // MAKE SURE GLOBAL INTERRUPTS ARE ENABLED
-}
+};
