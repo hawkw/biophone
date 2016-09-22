@@ -4,7 +4,7 @@
 PulseSensor pulseSensor;
 
 void _isr_wrapper() {
-    pulseSensor.read();
+    pulseSensor.read(); // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 }
 
 void PulseSensor::init_interrupts() {
